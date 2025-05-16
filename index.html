@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Music Player</title>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Poppins:wght@100;200;300;400;500;600;700;800;900&display=swap">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Icons">
+  <style>
+    body, div, h2, p{   margin:0;  padding:0;  box-sizing:border-box;   }
+    :root{
+      --pink:#ff74a4;      --violet:#9f6ea3;      --white:#fff;
+      --lightshadow:rgba(0,0,0,0.15);      --lightblack:#515c6f;
+      --pinkshadow:#ffcbdd;      --darkwhite:#cecaca;
+      --color-red:#ae1100;   --body-bg:#969aa5;        --play-bg:#dbdcf0;
+      --color-light:#fff;    --color-shadow:#babecc;   --text-color:#616e7f;
+      --bar-bg:#aec9f8;      --text-size:30px;
+    }
+    body{
+      height:100vh;  background:linear-gradient(var(--pink) 0%, var(--violet) 100%);
+      display:flex;  align-items:center;  justify-content:center;
+    }
+    .player_body{
+      width: 360px;  padding:25px 30px;  border-radius:16px;  
+      background:var(--play-bg);
+      box-shadow:6px 5px 10px 0px var(--text-color),
+                7px 7px 5px 0px var(--color-light) inset,
+                -7px -7px 5px 0px var(--color-shadow) inset;
+      user-select:none;  /* auto(기본):글자선택 , none:글자선택안됨, text, all(click으로 선택) */
+    }
+    .top{   margin-bottom:25px;  }
+    .top>h2{
+      font-size:var(--text-size);  font-weight:700;  color:var(--text-color);  text-align:center;
+      text-shadow:1px 1px 1px var(--color-light), -1px -1px 1px var(--lightblack);
+      /*
+      background:linear-gradient(0deg, rgba(208,121,54,1) 0%, rgba(255,248,0,1) 100%);
+      color:transparent;  -webkit-background-clip:text; -moz-background-clip:text;  background-clip:text;
+      */
+    }
+    .album{      height:260px;  border-radius:12px;  overflow:hidden;    }
+    .album>img{
+      width:100%;  height:100%;  object-fit:cover;   object-position:center bottom;
+    }
+    .info{
+      text-align:center;  font-size:calc(var(--text-size) * 0.8);  margin:calc(var(--text-size) * 0.5);
+    }
+    .info>.artist{   font-size:calc(var(--text-size) * 0.6);             }
+    .progress{
+      height:8px;  border-radius:8px;  background:var(--play-bg);
+      box-shadow:2px 2px 2px 0px var(--color-shadow) inset,
+                -2px -2px 2px 0px var(--color-light) inset;
+    }
+    .progress>.bar{
+      width:0%;  height:8px;  border-radius:8px;  background:var(--bar-bg);
+      box-shadow:2px 2px 3px 0px var(--color-shadow) inset;
+    }
+    .progress>.timebox{
+      margin-top:8px;  font-size:calc(var(--text-size) * 0.5);
+      display:flex;  justify-content:space-between;
+    }
+    .progress>.timebox>span{
+      color:#151515;  font-weight:600;  text-shadow:1px 1px 0px var(--color-light);
+    }
+    .controls{
+      margin-top:40px;  display:flex;  justify-content:space-between;  align-items:center;
+    }
+    .controls>span{
+      font-size:var(--text-size);   width:40px;  height:40px;  border-radius:50%;
+      background:var(--play-bg);  color:var(--text-color);
+      display:flex;  justify-content:center;  align-items:center;
+      box-shadow:-5px -5px 20px 0px var(--color-light), 5px 5px 20px 0px var(--color-shadow);
+      text-shadow:1px 1px 0px var(--color-light);
+    }
+    .controls>span:hover, .controls>span:active{
+      color:var(--color-red);
+      box-shadow:-3px -3px 5px 0px var(--color-light), 3px 3px 5px 0px var(--color-shadow);
+    }
+    .volume{
+      width: 200px; height: 20px; background: #333; position: relative; cursor: pointer;
+      display: block; left: 200px;
+    }
+    .volume>.volumeBar{
+      width: 100%; height: 100%; background: #fff;
+    }
+  </style>
+</head>
+<body>
+  <div class="player_body">
+    <div class="top">
+      <h2>NEUMORPHISM MUSIC PLAYER</h2>
+    </div>
+    <div class="album">
+      <img src="images/album1.jpg" alt="">
+    </div>
+    <div class="volume">
+      <span class="volumeBar"></span>
+    </div>
+    <div class="info">
+      <p class="name">Alone</p>
+      <p class="artist">Color Out</p>
+    </div>
+    <div class="progress">
+      <div class="bar"><audio src="" id="mainAudio"></audio></div>
+      <div class="timebox">
+        <span class="current">0:00</span> / <span class="duration">0:00</span>
+      </div>
+    </div>
+    <div class="controls">
+      <span id="repeatBtn" class="material-icons">repeat</span>
+      <span id="prevBtn" class="material-icons">skip_previous</span>
+      <span id="playBtn" class="material-icons">play_arrow</span> <!-- pause -->
+      <span id="nextBtn" class="material-icons">skip_next</span>
+      <span id="listBtn" class="material-icons">queue_music</span>
+    </div>
+  </div>
+
+  <script src="music_list.js"></script>
+  <script>
+    const musicApp = document.querySelector('.player_body');
+    const musicAudio = musicApp.querySelector('#mainAudio');    
+    const playBtn = musicApp.querySelector('#playBtn');
+
+    const albumImg = musicApp.querySelector('.album>img');
+    const musicName = musicApp.querySelector('.name');
+    const artistName = musicApp.querySelector('.artist');
+    const playTime = musicApp.querySelector('.current');
+    const totalTime = musicApp.querySelector('.duration');
+    const progressive = musicApp.querySelector('.progress');
+    const progressBar = musicApp.querySelector('.bar');
+    const prevBtn = musicApp.querySelector('#prevBtn');
+    const nextBtn = musicApp.querySelector('#nextBtn');
+    let list_index = 0;
+
+    const loadMusic=(num)=>{ // music list 배열순번 정의 인자(매개변수) : num
+      //파일경로, 이미지경로, 음악이름, 아티스트이름, 전체시간 출력
+      musicAudio.src = `./songs/${musicList[num].audio}.mp3`;
+      albumImg.src = `./images/${musicList[num].img}.jpg`;
+      musicName.innerHTML = musicList[num].name;
+      artistName.innerHTML = musicList[num].artist;
+      totalTime.innerHTML = musicList[num].total;
+    }
+    //list_index=3;
+    loadMusic(list_index); 
+    const musicPlay =()=>{
+      musicAudio.play();
+      playBtn.innerHTML = "pause";
+    }
+    const musicPause=()=>{
+      musicAudio.pause();
+      playBtn.innerHTML = "play_arrow";
+    }
+    playBtn.addEventListener('click', ()=>{      
+      (playBtn.innerText==='play_arrow') ? musicPlay():musicPause();
+      /*  if(playBtn.innerText==='play_arrow'){ musicPlay() }else{  musicPause()    } */
+    });
+
+    const prevMusic = () =>{
+      list_index--;
+      if( list_index < 0 ){
+        list_index = musicList.length - 1;
+      }
+      loadMusic(list_index); 
+      musicAudio.play();
+      playBtn.innerHTML = "pause";
+    }
+    const nextMusic = () =>{
+      list_index++;
+      if( list_index >= musicList.length ){
+        list_index = 0;
+      }
+      loadMusic(list_index); 
+      musicAudio.play();
+      playBtn.innerHTML = "pause";
+    }
+    prevBtn.addEventListener('click', ()=>{
+      prevMusic();
+    });
+    nextBtn.addEventListener('click', ()=>{
+      nextMusic();
+    });
+
+    musicAudio.addEventListener('timeupdate', (e)=>{
+      let current = e.target.currentTime;
+      let duration = e.target.duration;
+      let progressRatio = (current/duration)*100;
+      progressBar.style.width = `${progressRatio}%`;
+      let currentMin = Math.floor( current/60 );
+      let currentSec = Math.floor( current%60 );
+      if( currentMin<10 ){   
+        currentMin = `0${currentMin}`;
+      }
+      if( currentSec<10 ){   
+        currentSec = `0${currentSec}`;
+      }
+      playTime.innerHTML = `${currentMin} : ${currentSec}`;
+    });
+
+    progressive.addEventListener('click', (e)=>{
+      let clickPosition = e.offsetX;  // console.log( e.pageX, e.offsetX )
+      let maxWidth = progressive.clientWidth;  
+      musicAudio.currentTime = ( clickPosition/maxWidth )*musicAudio.duration;
+      if( playBtn.innerHTML === 'play_arrow'){
+        musicPlay();
+      }
+    })
+
+  </script>
+</body>
+</html>
